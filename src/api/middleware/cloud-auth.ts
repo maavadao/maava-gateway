@@ -28,7 +28,7 @@ declare global {
 }
 
 const JWT_SECRET = process.env.JWT_SECRET || "change-this-jwt-secret";
-const JWT_ISSUER = "barrsa-auth";
+const JWT_ISSUER = "mawadao-auth";
 const AUTH_DEBUG = process.env.AUTH_DEBUG === "true";
 
 if (!process.env.JWT_SECRET) {

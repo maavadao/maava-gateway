@@ -32,7 +32,7 @@ describe("cloud-auth middleware", () => {
             userId: "u1",
             email: "test@test.com",
             sub: "u1",
-            iss: "barrsa-auth",
+            iss: "mawadao-auth",
             exp: Math.floor(Date.now() / 1000) + 3600,
         };
         const token = createHS256Token(payload, SECRET);
@@ -51,7 +51,7 @@ describe("cloud-auth middleware", () => {
         const payload = {
             userId: "u1",
             sub: "u1",
-            iss: "barrsa-auth",
+            iss: "mawadao-auth",
             exp: Math.floor(Date.now() / 1000) + 3600,
         };
         const token = createHS256Token(payload, "wrong-secret");
@@ -68,7 +68,7 @@ describe("cloud-auth middleware", () => {
         const payload = {
             userId: "u1",
             sub: "u1",
-            iss: "barrsa-auth",
+            iss: "mawadao-auth",
             exp: Math.floor(Date.now() / 1000) - 100, // already expired
         };
         // Parsing should reject this
@@ -82,7 +82,7 @@ describe("cloud-auth middleware", () => {
             iss: "evil-issuer",
             exp: Math.floor(Date.now() / 1000) + 3600,
         };
-        expect(payload.iss).not.toBe("barrsa-auth");
+        expect(payload.iss).not.toBe("mawadao-auth");
     });
 
     it("prevents timing attacks with timingSafeEqual", () => {

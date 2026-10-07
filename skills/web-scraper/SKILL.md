@@ -1,5 +1,5 @@
 ---
-name: Barrsa Web Scraper
+name: mawaDao Web Scraper
 version: 1.0.0
 description: >
   Advanced web scraping skill using Lightpanda headless browser.
@@ -7,12 +7,12 @@ description: >
   standard HTTP scrapers. Use for marketplace product import and
   data extraction from JavaScript-heavy or CAPTCHA-protected sites.
 metadata:
-  author: Barrsa AI
+  author: mawaDao
   source: "https://github.com/lightpanda-io/agent-skill"
   homepage: "https://github.com/lightpanda-io/browser"
 ---
 
-# Barrsa Web Scraper Skill
+# mawaDao Web Scraper Skill
 
 Use Lightpanda headless browser for web scraping when standard HTTP fetch or
 built-in browser tools are blocked by anti-bot protections (CAPTCHA, JS

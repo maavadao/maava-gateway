@@ -303,7 +303,7 @@ export class OpenClawApp extends LitElement {
   private topbarObserver: ResizeObserver | null = null;
 
   private static PROVISION_LOGS = [
-    'Claiming your Barrsa corner on the internet…',
+    'Claiming your mawaDao corner on the internet…',
     'Teaching the Moonshot engine your new address…',
     'Warming up silicon and optimism…',
     'Laying out fresh cables for your AI workspace…',
@@ -394,9 +394,9 @@ export class OpenClawApp extends LitElement {
 
     const poll = async () => {
       try {
-        // The provision status API lives on the main barrsa-frontend, not
+        // The provision status API lives on the main mawadao-frontend, not
         // on this tenant subdomain.  Derive the main domain from the
-        // current hostname (e.g. my-workspace.barrsa.com → barrsa.com).
+        // current hostname (e.g. my-workspace.mawadao.com → mawadao.com).
         const host = window.location.hostname;
         const parts = host.split('.');
         const mainDomain = parts.length > 2 ? parts.slice(1).join('.') : host;

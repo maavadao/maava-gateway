@@ -1,17 +1,17 @@
 {
-  "id": "barrsa-seller-agent",
+  "id": "mawadao-seller-agent",
   "kind": "tools",
   "configSchema": {
     "type": "object",
     "additionalProperties": false,
     "properties": {
-      "barrsa_api_url": {
+      "mawadao_api_url": {
         "type": "string",
-        "description": "Base URL of the Barrsa Configuration API (e.g. https://api.barrsa.ai/api/v1)"
+        "description": "Base URL of the mawaDao Configuration API (e.g. https://api.mawadao.ai/api/v1)"
       },
-      "barrsa_api_token": {
+      "mawadao_api_token": {
         "type": "string",
-        "description": "Bearer token for authenticating with the Barrsa API"
+        "description": "Bearer token for authenticating with the mawaDao API"
       },
       "gemini_api_key": {
         "type": "string",
@@ -22,6 +22,6 @@
         "description": "PaySponge API Key — used for wallet operations, payment links, and USDC transactions. Optional if SPONGE_API_KEY env var is already set."
       }
     },
-    "required": ["barrsa_api_url", "barrsa_api_token"]
+    "required": ["mawadao_api_url", "mawadao_api_token"]
   }
 }

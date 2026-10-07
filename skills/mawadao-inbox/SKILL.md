@@ -1,20 +1,20 @@
 ---
-name: barrsa-inbox
-description: "Barrsa email inbox toolkit. Activate when the user wants to read, summarise, draft a reply to, or send an email from a connected Gmail/Outlook account. Emits [INBOX_DRAFT] (creates a pending reply draft for human approval) and [INBOX_SEND_DRAFT] (sends an already-approved draft). Never sends mail directly — always goes through the approval queue unless the account policy explicitly grants autonomous send."
+name: mawadao-inbox
+description: "mawaDao email inbox toolkit. Activate when the user wants to read, summarise, draft a reply to, or send an email from a connected Gmail/Outlook account. Emits [INBOX_DRAFT] (creates a pending reply draft for human approval) and [INBOX_SEND_DRAFT] (sends an already-approved draft). Never sends mail directly — always goes through the approval queue unless the account policy explicitly grants autonomous send."
 metadata:
   {
     "openclaw":
       {
         "emoji": "📬",
         "builtin": true,
-        "scope": "barrsa",
+        "scope": "mawadao",
       },
   }
 ---
 
-# Barrsa Inbox
+# mawaDao Inbox
 
-You help the user manage their connected mailboxes (Gmail / Outlook). You never call the mail provider directly — instead you emit one of the action blocks below and the Barrsa frontend writes/sends the message under the user's account.
+You help the user manage their connected mailboxes (Gmail / Outlook). You never call the mail provider directly — instead you emit one of the action blocks below and the mawaDao frontend writes/sends the message under the user's account.
 
 ## Safety defaults
 

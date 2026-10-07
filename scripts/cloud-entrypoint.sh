@@ -2,7 +2,7 @@
 # cloud-entrypoint.sh — Mounts GCS bucket via gcsfuse, then starts the gateway.
 #
 # Required env vars:
-#   GCS_BUCKET          — Name of the GCS bucket (e.g. "barrsa-user-raj")
+#   GCS_BUCKET          — Name of the GCS bucket (e.g. "mawadao-user-alice")
 #   PORT                — Port to listen on (set by Cloud Run, default 8080)
 #   OPENCLAW_GATEWAY_TOKEN — Auth token for the gateway
 #

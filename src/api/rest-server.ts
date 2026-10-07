@@ -18,7 +18,7 @@ import { setGatewayContext } from "./routes/_handler.ts";
 import { userDb } from "./db/user-db.ts";
 
 const CLOUD_MODE = process.env.OPENCLAW_CLOUD_MODE === "true";
-const ALLOWED_ORIGIN = process.env.CORS_ORIGIN || "https://*.barrsa.com";
+const ALLOWED_ORIGIN = process.env.CORS_ORIGIN || "https://*.mawadao.com";
 import {
     healthRoutes,
     authRoutes,
@@ -81,7 +81,7 @@ export function createRestApp(context: GatewayRequestContext): express.Applicati
         next();
     });
 
-    // CORS — restrict to *.barrsa.com + Cloud Run origins in cloud mode; wide open in dev
+    // CORS — restrict to *.mawadao.com + Cloud Run origins in cloud mode; wide open in dev
     const EXTRA_ORIGINS = (process.env.CORS_ORIGIN || "")
         .split(",")
         .map((s) => s.trim().toLowerCase())
@@ -89,10 +89,10 @@ export function createRestApp(context: GatewayRequestContext): express.Applicati
     app.use((_req, res, next) => {
         const origin = _req.headers.origin || "";
         if (CLOUD_MODE) {
-            const isBarrsa = /^https?:\/\/([a-z0-9-]+\.)?barrsa\.com(:\d+)?$/.test(origin);
+            const ismawaDao = /^https?:\/\/([a-z0-9-]+\.)?mawadao\.com(:\d+)?$/.test(origin);
             const isCloudRun = /^https?:\/\/[a-z0-9-]+\.europe-west1\.run\.app$/.test(origin);
             const isExtra = EXTRA_ORIGINS.includes(origin.toLowerCase());
-            if (isBarrsa || isCloudRun || isExtra) {
+            if (ismawaDao || isCloudRun || isExtra) {
                 res.setHeader("Access-Control-Allow-Origin", origin);
             }
         } else {

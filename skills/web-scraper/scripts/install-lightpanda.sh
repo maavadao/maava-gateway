@@ -1,5 +1,5 @@
 #!/bin/bash
-# Lightpanda Install Script for Barrsa/OpenClaw
+# Lightpanda Install Script for mawaDao/OpenClaw
 # Installs the Lightpanda headless browser binary for web scraping
 #
 # Usage: bash scripts/install-lightpanda.sh
@@ -10,7 +10,7 @@ set -e
 INSTALL_DIR="${LIGHTPANDA_DIR:-$HOME/.local/bin}"
 BINARY_NAME="lightpanda"
 
-echo "=== Lightpanda Setup (Barrsa Web Scraper Skill) ==="
+echo "=== Lightpanda Setup (mawaDao Web Scraper Skill) ==="
 echo "Install directory: $INSTALL_DIR"
 
 # Detect OS and architecture

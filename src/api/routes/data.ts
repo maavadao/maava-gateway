@@ -174,7 +174,7 @@ router.get("/data/export", async (req, res) => {
     res.setHeader("Content-Type", "application/zip");
     res.setHeader(
       "Content-Disposition",
-      `attachment; filename="barrsa-export.zip"`,
+      `attachment; filename="mawadao-export.zip"`,
     );
     res.setHeader("Content-Length", stat.size);
 

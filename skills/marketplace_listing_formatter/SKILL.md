@@ -1,12 +1,12 @@
 ---
 name: marketplace_listing_formatter
-description: Use when formatting final marketplace listings for Barrsa's internal marketplace. Handles catalog structure, SEO-friendly copy, and consistent listing format across all seller categories.
+description: Use when formatting final marketplace listings for mawaDao's internal marketplace. Handles catalog structure, SEO-friendly copy, and consistent listing format across all seller categories.
 metadata: { "openclaw": { "emoji": "🏪" } }
 ---
 
 # Marketplace Listing Formatter
 
-Formats product listings for Barrsa's internal marketplace catalog.
+Formats product listings for mawaDao's internal marketplace catalog.
 
 ## Listing Structure
 

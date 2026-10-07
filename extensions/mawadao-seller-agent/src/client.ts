@@ -1,11 +1,11 @@
 /**
- * Barrsa Seller API Client
+ * mawaDao Seller API Client
  *
- * Used by the OpenClaw plugin to call back into the Barrsa Configuration API.
- * Barrsa owns the data; OpenClaw is the intelligent operator.
+ * Used by the OpenClaw plugin to call back into the mawaDao Configuration API.
+ * mawaDao owns the data; OpenClaw is the intelligent operator.
  */
 
-export class BarrsaSellerClient {
+export class MawadaoSellerClient {
   private baseUrl: string;
   private token: string;
   private userId?: string;
@@ -40,7 +40,7 @@ export class BarrsaSellerClient {
     if (!response.ok) {
       const msg =
         (data as Record<string, string>)?.error || `HTTP ${response.status}`;
-      throw new Error(`Barrsa API error: ${msg}`);
+      throw new Error(`mawaDao API error: ${msg}`);
     }
 
     return (data as Record<string, T>)?.data ?? (data as T);

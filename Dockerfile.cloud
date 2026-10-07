@@ -1,10 +1,10 @@
-# Dockerfile.cloud — Per-user Cloud Run backend for Barrsa Cloud
+# Dockerfile.cloud — Per-user Cloud Run backend for mawaDao Cloud
 # Based on the main Dockerfile but adds:
 #   - gcsfuse for mounting GCS buckets as local filesystem
 #   - Cloud mode env vars (OPENCLAW_CLOUD_MODE=true)
 #   - Custom entrypoint that mounts GCS before starting the gateway
 #
-# Build: docker build -f Dockerfile.cloud -t barrsa-cloud-backend .
+# Build: docker build -f Dockerfile.cloud -t mawadao-cloud-backend .
 # Deploy: gcloud run deploy <service> --image <image> --execution-environment gen2
 
 FROM node:22-bookworm
