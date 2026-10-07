@@ -22,7 +22,7 @@ Requires Node.js 22.12+ and pnpm 10.
 
 ```bash
 pnpm install
-pnpm build
+OPENCLAW_A2UI_SKIP_MISSING=1 pnpm build
 OPENCLAW_REST_API=1 pnpm dev        # REST API on OPENCLAW_REST_PORT (default 3000)
 ```
 
