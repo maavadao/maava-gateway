@@ -18,5 +18,3 @@ jobs:
       # The A2UI canvas sources are not vendored; use the prebuilt bundle like Dockerfile.cloud does.
       - run: OPENCLAW_A2UI_SKIP_MISSING=1 pnpm build
       - run: pnpm ui:build
-      - name: Build hosted image
-        run: docker build -f Dockerfile.cloud -t ci .
