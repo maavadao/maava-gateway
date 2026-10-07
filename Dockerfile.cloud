@@ -52,7 +52,7 @@ RUN curl -fsSL https://go.dev/dl/go1.23.4.linux-amd64.tar.gz | tar -C /usr/local
     go install github.com/steipete/blucli/cmd/blu@latest && \
     go install github.com/steipete/eightctl/cmd/eightctl@latest && \
     go install github.com/steipete/sonoscli/cmd/sonos@latest && \
-    go install github.com/steipete/wacli/cmd/wacli@latest && \
+    go install github.com/openclaw/wacli/cmd/wacli@latest && \
     go install github.com/steipete/gifgrep/cmd/gifgrep@latest && \
     go install github.com/steipete/ordercli/cmd/ordercli@latest && \
     rm -rf /usr/local/go /root/go
