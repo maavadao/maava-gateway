@@ -27,14 +27,8 @@ declare global {
     }
 }
 
-const JWT_SECRET = process.env.JWT_SECRET || "change-this-jwt-secret";
 const JWT_ISSUER = "mawadao-auth";
 const AUTH_DEBUG = process.env.AUTH_DEBUG === "true";
-
-if (!process.env.JWT_SECRET) {
-    // eslint-disable-next-line no-console
-    console.warn("[cloud-auth] JWT_SECRET not set — using insecure default. Auth will fail in production.");
-}
 
 /** Decode a base64url-encoded string */
 function base64UrlDecode(str: string): Buffer {
@@ -126,9 +120,16 @@ export function cloudAuthMiddleware(req: Request, res: Response, next: NextFunct
         return;
     }
 
-    // Verify JWT
+    // Verify JWT. Without a configured secret every token is rejected; there is no default.
+    const jwtSecret = process.env.JWT_SECRET;
+    if (!jwtSecret) {
+        // eslint-disable-next-line no-console
+        console.error("[cloud-auth] JWT_SECRET is not set; rejecting all tokens");
+        res.status(503).json({ success: false, data: null, message: "Authentication is not configured" });
+        return;
+    }
     let claims: CloudClaims;
-    const decoded = verifyHS256(token, JWT_SECRET);
+    const decoded = verifyHS256(token, jwtSecret);
     if (!decoded) {
         if (AUTH_DEBUG) {
             // eslint-disable-next-line no-console
