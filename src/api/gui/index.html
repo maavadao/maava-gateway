@@ -1,0 +1,1182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OpenClaw API</title>
+<style>
+/* ── Reset & Base ─────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg: #f5f5f7;
+  --surface: #ffffff;
+  --surface-hover: #fafafa;
+  --text: #1d1d1f;
+  --text-secondary: #86868b;
+  --text-tertiary: #aeaeb2;
+  --border: #e5e5e7;
+  --border-light: #f0f0f2;
+  --shadow-sm: 0 1px 3px rgba(0,0,0,.04), 0 1px 2px rgba(0,0,0,.06);
+  --shadow-md: 0 4px 12px rgba(0,0,0,.06), 0 1px 4px rgba(0,0,0,.04);
+  --shadow-lg: 0 12px 40px rgba(0,0,0,.08), 0 4px 12px rgba(0,0,0,.04);
+  --shadow-xl: 0 20px 60px rgba(0,0,0,.1), 0 8px 20px rgba(0,0,0,.05);
+  --radius: 12px;
+  --radius-sm: 8px;
+  --radius-xs: 6px;
+  --font: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  --mono: 'SF Mono', 'Fira Code', 'JetBrains Mono', 'Cascadia Code', Menlo, Monaco, monospace;
+  --transition: 0.2s cubic-bezier(.25,.1,.25,1);
+  --transition-spring: 0.35s cubic-bezier(.34,1.56,.64,1);
+  --success: #34c759;
+  --error: #ff3b30;
+  --warning: #ff9500;
+  --info: #007aff;
+}
+
+html { font-size: 15px; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+body {
+  font-family: var(--font);
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.5;
+  min-height: 100vh;
+}
+
+/* ── Scrollbar ────────────────────────────────────────────────── */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--text-tertiary); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--text-secondary); }
+
+/* ── Layout ───────────────────────────────────────────────────── */
+.app {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  grid-template-rows: 56px 1fr;
+  height: 100vh;
+  overflow: hidden;
+}
+
+/* ── Top Bar ──────────────────────────────────────────────────── */
+.topbar {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 24px;
+  background: rgba(255,255,255,.72);
+  backdrop-filter: saturate(180%) blur(20px);
+  -webkit-backdrop-filter: saturate(180%) blur(20px);
+  border-bottom: 0.5px solid var(--border);
+  z-index: 100;
+  gap: 16px;
+}
+
+.topbar-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 600;
+  font-size: 1rem;
+  letter-spacing: -0.01em;
+  user-select: none;
+}
+
+.topbar-brand svg { opacity: 0.9; }
+
+.topbar-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+}
+
+.status-dot {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: var(--text-tertiary);
+  transition: background var(--transition);
+}
+.status-dot.connected { background: var(--success); box-shadow: 0 0 6px rgba(52,199,89,.4); }
+.status-dot.error { background: var(--error); box-shadow: 0 0 6px rgba(255,59,48,.4); }
+
+.topbar-config {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.server-input {
+  font-family: var(--mono);
+  font-size: 0.78rem;
+  padding: 6px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xs);
+  background: var(--bg);
+  color: var(--text);
+  width: 260px;
+  outline: none;
+  transition: border-color var(--transition), box-shadow var(--transition);
+}
+.server-input:focus {
+  border-color: var(--text-tertiary);
+  box-shadow: 0 0 0 3px rgba(0,0,0,.04);
+}
+
+/* ── Sidebar ──────────────────────────────────────────────────── */
+.sidebar {
+  background: rgba(255,255,255,.5);
+  backdrop-filter: blur(12px);
+  border-right: 0.5px solid var(--border);
+  overflow-y: auto;
+  padding: 12px 0;
+}
+
+.sidebar-section {
+  margin-bottom: 4px;
+}
+
+.sidebar-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 20px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-tertiary);
+  cursor: pointer;
+  user-select: none;
+  transition: color var(--transition);
+}
+.sidebar-section-header:hover { color: var(--text-secondary); }
+
+.sidebar-section-header .chevron {
+  transition: transform var(--transition);
+  opacity: 0.4;
+}
+.sidebar-section.collapsed .chevron { transform: rotate(-90deg); }
+.sidebar-section.collapsed .sidebar-items { display: none; }
+
+.sidebar-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 20px 7px 28px;
+  font-size: 0.82rem;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all var(--transition);
+  border-radius: 0;
+  position: relative;
+  user-select: none;
+}
+.sidebar-item::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: 3px;
+  background: var(--text);
+  border-radius: 0 2px 2px 0;
+  opacity: 0;
+  transition: opacity var(--transition);
+}
+.sidebar-item:hover {
+  color: var(--text);
+  background: rgba(0,0,0,.03);
+}
+.sidebar-item.active {
+  color: var(--text);
+  background: rgba(0,0,0,.04);
+  font-weight: 500;
+}
+.sidebar-item.active::before { opacity: 1; }
+
+.sidebar-item .method-badge {
+  font-family: var(--mono);
+  font-size: 0.6rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  padding: 1px 5px;
+  border-radius: 3px;
+  background: rgba(0,0,0,.05);
+  color: var(--text-tertiary);
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
+/* ── Main Content ─────────────────────────────────────────────── */
+.main {
+  overflow-y: auto;
+  padding: 32px 40px;
+}
+
+.welcome {
+  max-width: 560px;
+  margin: 80px auto;
+  text-align: center;
+  animation: fadeUp 0.5s ease-out;
+}
+.welcome h1 {
+  font-size: 2rem;
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  margin-bottom: 8px;
+}
+.welcome p {
+  color: var(--text-secondary);
+  font-size: 0.95rem;
+  line-height: 1.6;
+}
+.welcome-hint {
+  margin-top: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-size: 0.78rem;
+  color: var(--text-tertiary);
+}
+.welcome-hint kbd {
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  padding: 2px 6px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  box-shadow: 0 1px 1px rgba(0,0,0,.04);
+}
+
+/* ── Endpoint Panel ───────────────────────────────────────────── */
+.endpoint-panel {
+  max-width: 780px;
+  animation: fadeUp 0.3s ease-out;
+}
+
+.endpoint-header {
+  margin-bottom: 28px;
+}
+.endpoint-path {
+  font-family: var(--mono);
+  font-size: 1.15rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.endpoint-path .badge {
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  padding: 3px 8px;
+  border-radius: 4px;
+  background: var(--text);
+  color: var(--surface);
+}
+.endpoint-rpc {
+  font-size: 0.78rem;
+  color: var(--text-tertiary);
+  margin-top: 4px;
+  font-family: var(--mono);
+}
+
+/* ── Request Card ─────────────────────────────────────────────── */
+.card {
+  background: var(--surface);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
+  border: 0.5px solid var(--border);
+  overflow: hidden;
+  transition: box-shadow var(--transition);
+  margin-bottom: 20px;
+}
+.card:hover { box-shadow: var(--shadow-md); }
+
+.card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 20px;
+  border-bottom: 0.5px solid var(--border-light);
+}
+.card-title {
+  font-size: 0.78rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-secondary);
+}
+
+.card-body { padding: 0; }
+
+.editor-wrap {
+  position: relative;
+}
+
+.editor {
+  font-family: var(--mono);
+  font-size: 0.82rem;
+  line-height: 1.65;
+  padding: 16px 20px;
+  width: 100%;
+  min-height: 120px;
+  max-height: 320px;
+  border: none;
+  outline: none;
+  resize: vertical;
+  background: transparent;
+  color: var(--text);
+  tab-size: 2;
+}
+.editor::placeholder { color: var(--text-tertiary); }
+
+/* ── Headers Editor ───────────────────────────────────────────── */
+.headers-row {
+  display: flex;
+  gap: 8px;
+  padding: 8px 20px;
+  align-items: center;
+}
+.headers-row:first-child { padding-top: 14px; }
+.headers-row:last-of-type { padding-bottom: 14px; }
+
+.header-input {
+  font-family: var(--mono);
+  font-size: 0.78rem;
+  padding: 6px 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xs);
+  background: var(--bg);
+  color: var(--text);
+  outline: none;
+  flex: 1;
+  transition: border-color var(--transition);
+}
+.header-input:focus { border-color: var(--text-tertiary); }
+.header-input.key { flex: 0.8; }
+
+.header-remove {
+  width: 28px; height: 28px;
+  display: flex; align-items: center; justify-content: center;
+  border: none; background: none;
+  color: var(--text-tertiary);
+  cursor: pointer;
+  border-radius: var(--radius-xs);
+  transition: all var(--transition);
+  font-size: 1.1rem;
+}
+.header-remove:hover { background: rgba(0,0,0,.05); color: var(--text); }
+
+.add-header-btn {
+  font-size: 0.75rem;
+  color: var(--text-tertiary);
+  cursor: pointer;
+  padding: 6px 20px 14px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  transition: color var(--transition);
+  background: none;
+  border: none;
+  font-family: var(--font);
+}
+.add-header-btn:hover { color: var(--text-secondary); }
+
+/* ── Send Button ──────────────────────────────────────────────── */
+.send-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.btn-send {
+  font-family: var(--font);
+  font-size: 0.82rem;
+  font-weight: 500;
+  padding: 10px 28px;
+  border: none;
+  border-radius: 980px;
+  background: var(--text);
+  color: var(--surface);
+  cursor: pointer;
+  transition: all var(--transition);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  position: relative;
+  overflow: hidden;
+}
+.btn-send:hover { transform: scale(1.02); box-shadow: var(--shadow-md); }
+.btn-send:active { transform: scale(0.98); }
+.btn-send.loading {
+  pointer-events: none;
+  opacity: 0.7;
+}
+.btn-send.loading::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,.15), transparent);
+  animation: shimmer 1.2s infinite;
+}
+
+.response-time {
+  font-family: var(--mono);
+  font-size: 0.75rem;
+  color: var(--text-tertiary);
+  transition: opacity var(--transition);
+}
+
+/* ── Response ─────────────────────────────────────────────────── */
+.response-card {
+  animation: fadeUp 0.25s ease-out;
+}
+
+.status-badge {
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 3px 10px;
+  border-radius: 980px;
+  letter-spacing: 0.02em;
+}
+.status-badge.s2xx { background: rgba(52,199,89,.1); color: #248a3d; }
+.status-badge.s4xx { background: rgba(255,149,0,.1); color: #c93400; }
+.status-badge.s5xx { background: rgba(255,59,48,.1); color: #d70015; }
+
+.response-body {
+  font-family: var(--mono);
+  font-size: 0.78rem;
+  line-height: 1.65;
+  padding: 16px 20px;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  color: var(--text);
+  max-height: 480px;
+  overflow-y: auto;
+}
+
+.response-meta {
+  display: flex;
+  gap: 16px;
+  padding: 10px 20px;
+  border-top: 0.5px solid var(--border-light);
+  font-size: 0.72rem;
+  color: var(--text-tertiary);
+  font-family: var(--mono);
+}
+
+/* ── Copy Button ──────────────────────────────────────────────── */
+.btn-copy {
+  font-family: var(--font);
+  font-size: 0.72rem;
+  padding: 4px 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xs);
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all var(--transition);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.btn-copy:hover { background: var(--bg); color: var(--text); }
+.btn-copy.copied { border-color: var(--success); color: var(--success); }
+
+/* ── History Panel ────────────────────────────────────────────── */
+.history-toggle {
+  font-family: var(--font);
+  font-size: 0.75rem;
+  color: var(--text-tertiary);
+  background: none;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 0;
+  transition: color var(--transition);
+}
+.history-toggle:hover { color: var(--text-secondary); }
+
+.history-list {
+  margin-top: 12px;
+}
+
+.history-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 16px;
+  font-size: 0.78rem;
+  border-radius: var(--radius-xs);
+  cursor: pointer;
+  transition: background var(--transition);
+  animation: fadeUp 0.2s ease-out;
+}
+.history-item:hover { background: rgba(0,0,0,.03); }
+
+.history-item .h-method {
+  font-family: var(--mono);
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: var(--text-tertiary);
+  width: 36px;
+}
+.history-item .h-path {
+  font-family: var(--mono);
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+  flex: 1;
+}
+.history-item .h-status {
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  font-weight: 600;
+}
+.history-item .h-status.ok { color: var(--success); }
+.history-item .h-status.err { color: var(--error); }
+.history-item .h-time {
+  font-family: var(--mono);
+  font-size: 0.68rem;
+  color: var(--text-tertiary);
+}
+
+/* ── Toast ────────────────────────────────────────────────────── */
+.toast {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  background: var(--text);
+  color: var(--surface);
+  font-size: 0.8rem;
+  padding: 10px 20px;
+  border-radius: 980px;
+  box-shadow: var(--shadow-xl);
+  opacity: 0;
+  pointer-events: none;
+  transition: all 0.3s cubic-bezier(.25,.1,.25,1);
+  z-index: 1000;
+}
+.toast.visible {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+/* ── Search ───────────────────────────────────────────────────── */
+.search-wrap {
+  padding: 8px 14px;
+  margin-bottom: 4px;
+}
+.search-input {
+  font-family: var(--font);
+  font-size: 0.82rem;
+  padding: 8px 12px 8px 32px;
+  width: 100%;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg);
+  color: var(--text);
+  outline: none;
+  transition: all var(--transition);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23aeaeb2' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cline x1='21' y1='21' x2='16.65' y2='16.65'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: 10px center;
+}
+.search-input:focus {
+  border-color: var(--text-tertiary);
+  box-shadow: 0 0 0 3px rgba(0,0,0,.04);
+}
+.search-input::placeholder { color: var(--text-tertiary); }
+
+/* ── Animations ───────────────────────────────────────────────── */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes shimmer {
+  from { transform: translateX(-100%); }
+  to   { transform: translateX(100%); }
+}
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+/* ── Responsive ───────────────────────────────────────────────── */
+@media (max-width: 860px) {
+  .app { grid-template-columns: 1fr; }
+  .sidebar { display: none; }
+  .main { padding: 24px 20px; }
+}
+</style>
+</head>
+<body>
+
+<div class="app">
+  <!-- ── Top Bar ──────────────────────────────────────────── -->
+  <header class="topbar">
+    <div class="topbar-brand">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+      OpenClaw API
+    </div>
+    <div class="topbar-config">
+      <input class="server-input" id="serverUrl" type="text" value="http://localhost:3000" spellcheck="false" placeholder="Server URL" />
+      <div class="topbar-status">
+        <span class="status-dot" id="statusDot"></span>
+        <span id="statusText">Not connected</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- ── Sidebar ──────────────────────────────────────────── -->
+  <nav class="sidebar" id="sidebar">
+    <div class="search-wrap">
+      <input class="search-input" id="searchInput" type="text" placeholder="Search endpoints…" spellcheck="false" />
+    </div>
+    <!-- sidebar items injected by JS -->
+  </nav>
+
+  <!-- ── Main Content ─────────────────────────────────────── -->
+  <main class="main" id="main">
+    <div class="welcome" id="welcome">
+      <h1>OpenClaw API Console</h1>
+      <p>Select an endpoint from the sidebar to start making requests. All responses follow the standard JSON envelope.</p>
+      <div class="welcome-hint">
+        <kbd>⌘</kbd> <kbd>K</kbd> to search &nbsp;·&nbsp; Click any endpoint to begin
+      </div>
+    </div>
+    <div class="endpoint-panel" id="endpointPanel" style="display:none">
+      <!-- injected dynamically -->
+    </div>
+  </main>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ── Endpoint Registry ────────────────────────────────────────────
+
+const ENDPOINTS = [
+  { section: "Health", items: [
+    { path: "/health", rpc: "health", body: {} },
+    { path: "/status", rpc: "status", body: {} },
+  ]},
+  { section: "Config", items: [
+    { path: "/config/get", rpc: "config.get", body: {} },
+    { path: "/config/set", rpc: "config.set", body: { config: {} } },
+    { path: "/config/apply", rpc: "config.apply", body: {} },
+    { path: "/config/patch", rpc: "config.patch", body: { patch: {} } },
+    { path: "/config/schema", rpc: "config.schema", body: {} },
+  ]},
+  { section: "Agents", items: [
+    { path: "/agent/run", rpc: "agent", body: { message: "" } },
+    { path: "/agent/identity", rpc: "agent.identity.get", body: {} },
+    { path: "/agent/wait", rpc: "agent.wait", body: {} },
+    { path: "/agents/list", rpc: "agents.list", body: {} },
+    { path: "/agents/files/list", rpc: "agents.files.list", body: {} },
+    { path: "/agents/files/get", rpc: "agents.files.get", body: { path: "" } },
+    { path: "/agents/files/set", rpc: "agents.files.set", body: { path: "", content: "" } },
+  ]},
+  { section: "Channels", items: [
+    { path: "/channels/status", rpc: "channels.status", body: {} },
+    { path: "/channels/logout", rpc: "channels.logout", body: { channel: "" } },
+  ]},
+  { section: "Sessions", items: [
+    { path: "/sessions/list", rpc: "sessions.list", body: {} },
+    { path: "/sessions/preview", rpc: "sessions.preview", body: { sessionId: "" } },
+    { path: "/sessions/patch", rpc: "sessions.patch", body: { sessionId: "", patch: {} } },
+    { path: "/sessions/reset", rpc: "sessions.reset", body: { sessionId: "" } },
+    { path: "/sessions/delete", rpc: "sessions.delete", body: { sessionId: "" } },
+    { path: "/sessions/compact", rpc: "sessions.compact", body: { sessionId: "" } },
+  ]},
+  { section: "Models", items: [
+    { path: "/models/list", rpc: "models.list", body: {} },
+  ]},
+  { section: "Messages", items: [
+    { path: "/messages/send", rpc: "send", body: { text: "" } },
+    { path: "/messages/wake", rpc: "wake", body: {} },
+  ]},
+  { section: "Cron", items: [
+    { path: "/cron/list", rpc: "cron.list", body: {} },
+    { path: "/cron/status", rpc: "cron.status", body: {} },
+    { path: "/cron/add", rpc: "cron.add", body: { schedule: "", command: "" } },
+    { path: "/cron/update", rpc: "cron.update", body: { id: "", schedule: "" } },
+    { path: "/cron/remove", rpc: "cron.remove", body: { id: "" } },
+    { path: "/cron/run", rpc: "cron.run", body: { id: "" } },
+    { path: "/cron/runs", rpc: "cron.runs", body: {} },
+  ]},
+  { section: "Skills", items: [
+    { path: "/skills/status", rpc: "skills.status", body: {} },
+    { path: "/skills/bins", rpc: "skills.bins", body: {} },
+    { path: "/skills/install", rpc: "skills.install", body: { name: "" } },
+    { path: "/skills/update", rpc: "skills.update", body: { name: "" } },
+  ]},
+  { section: "Nodes", items: [
+    { path: "/nodes/list", rpc: "node.list", body: {} },
+    { path: "/nodes/describe", rpc: "node.describe", body: { nodeId: "" } },
+    { path: "/nodes/invoke", rpc: "node.invoke", body: { nodeId: "", command: "" } },
+    { path: "/nodes/rename", rpc: "node.rename", body: { nodeId: "", name: "" } },
+    { path: "/nodes/event", rpc: "node.event", body: { nodeId: "", event: "" } },
+    { path: "/nodes/pair/request", rpc: "node.pair.request", body: {} },
+    { path: "/nodes/pair/list", rpc: "node.pair.list", body: {} },
+    { path: "/nodes/pair/approve", rpc: "node.pair.approve", body: { pairId: "" } },
+    { path: "/nodes/pair/reject", rpc: "node.pair.reject", body: { pairId: "" } },
+    { path: "/nodes/pair/verify", rpc: "node.pair.verify", body: { pairId: "" } },
+  ]},
+  { section: "Devices", items: [
+    { path: "/devices/pair/list", rpc: "device.pair.list", body: {} },
+    { path: "/devices/pair/approve", rpc: "device.pair.approve", body: { pairId: "" } },
+    { path: "/devices/pair/reject", rpc: "device.pair.reject", body: { pairId: "" } },
+    { path: "/devices/token/rotate", rpc: "device.token.rotate", body: {} },
+    { path: "/devices/token/revoke", rpc: "device.token.revoke", body: { tokenId: "" } },
+  ]},
+  { section: "TTS", items: [
+    { path: "/tts/status", rpc: "tts.status", body: {} },
+    { path: "/tts/providers", rpc: "tts.providers", body: {} },
+    { path: "/tts/enable", rpc: "tts.enable", body: {} },
+    { path: "/tts/disable", rpc: "tts.disable", body: {} },
+    { path: "/tts/convert", rpc: "tts.convert", body: { text: "" } },
+    { path: "/tts/set-provider", rpc: "tts.setProvider", body: { provider: "" } },
+  ]},
+  { section: "Wizard", items: [
+    { path: "/wizard/start", rpc: "wizard.start", body: {} },
+    { path: "/wizard/next", rpc: "wizard.next", body: { sessionId: "" } },
+    { path: "/wizard/cancel", rpc: "wizard.cancel", body: { sessionId: "" } },
+    { path: "/wizard/status", rpc: "wizard.status", body: { sessionId: "" } },
+  ]},
+  { section: "Chat", items: [
+    { path: "/chat/history", rpc: "chat.history", body: {} },
+    { path: "/chat/send", rpc: "chat.send", body: { message: "" } },
+    { path: "/chat/abort", rpc: "chat.abort", body: {} },
+  ]},
+  { section: "Logs", items: [
+    { path: "/logs/tail", rpc: "logs.tail", body: {} },
+  ]},
+  { section: "System", items: [
+    { path: "/usage/status", rpc: "usage.status", body: {} },
+    { path: "/usage/cost", rpc: "usage.cost", body: {} },
+    { path: "/talk/mode", rpc: "talk.mode", body: {} },
+    { path: "/voicewake/get", rpc: "voicewake.get", body: {} },
+    { path: "/voicewake/set", rpc: "voicewake.set", body: { triggers: [] } },
+    { path: "/system/presence", rpc: "system-presence", body: {} },
+    { path: "/system/event", rpc: "system-event", body: { text: "" } },
+    { path: "/system/heartbeat", rpc: "last-heartbeat", body: {} },
+    { path: "/system/heartbeats", rpc: "set-heartbeats", body: { enabled: true } },
+    { path: "/update/run", rpc: "update.run", body: {} },
+    { path: "/browser/request", rpc: "browser.request", body: { url: "" } },
+    { path: "/exec/approvals/get", rpc: "exec.approvals.get", body: {} },
+    { path: "/exec/approvals/set", rpc: "exec.approvals.set", body: {} },
+    { path: "/exec/approvals/node/get", rpc: "exec.approvals.node.get", body: { nodeId: "" } },
+    { path: "/exec/approvals/node/set", rpc: "exec.approvals.node.set", body: { nodeId: "" } },
+    { path: "/exec/approval/request", rpc: "exec.approval.request", body: {} },
+    { path: "/exec/approval/resolve", rpc: "exec.approval.resolve", body: {} },
+  ]},
+];
+
+// ── State ────────────────────────────────────────────────────────
+
+let activeEndpoint = null;
+let history = [];
+let customHeaders = [{ key: "X-Tenant-ID", value: "" }];
+
+// ── DOM refs ─────────────────────────────────────────────────────
+
+const $ = (sel) => document.querySelector(sel);
+const sidebar = $("#sidebar");
+const main = $("#main");
+const welcome = $("#welcome");
+const panel = $("#endpointPanel");
+const searchInput = $("#searchInput");
+const serverInput = $("#serverUrl");
+const statusDot = $("#statusDot");
+const statusText = $("#statusText");
+const toast = $("#toast");
+
+// ── Build Sidebar ────────────────────────────────────────────────
+
+function buildSidebar(filter = "") {
+  const existing = sidebar.querySelectorAll(".sidebar-section");
+  existing.forEach((el) => el.remove());
+
+  const lf = filter.toLowerCase();
+
+  ENDPOINTS.forEach((section) => {
+    const items = section.items.filter(
+      (it) => !lf || it.path.toLowerCase().includes(lf) || it.rpc.toLowerCase().includes(lf) || section.section.toLowerCase().includes(lf)
+    );
+    if (items.length === 0) return;
+
+    const sec = document.createElement("div");
+    sec.className = "sidebar-section";
+
+    const header = document.createElement("div");
+    header.className = "sidebar-section-header";
+    header.innerHTML = `<span>${section.section}</span><svg class="chevron" width="10" height="10" viewBox="0 0 10 10"><path d="M3 1l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+    header.onclick = () => sec.classList.toggle("collapsed");
+    sec.appendChild(header);
+
+    const list = document.createElement("div");
+    list.className = "sidebar-items";
+
+    items.forEach((item) => {
+      const el = document.createElement("div");
+      el.className = "sidebar-item";
+      if (activeEndpoint && activeEndpoint.path === item.path) el.classList.add("active");
+      el.innerHTML = `<span>${item.path}</span><span class="method-badge">POST</span>`;
+      el.onclick = () => selectEndpoint(item);
+      list.appendChild(el);
+    });
+
+    sec.appendChild(list);
+    sidebar.appendChild(sec);
+  });
+}
+
+// ── Select Endpoint ──────────────────────────────────────────────
+
+function selectEndpoint(item) {
+  activeEndpoint = item;
+  welcome.style.display = "none";
+  panel.style.display = "block";
+  panel.style.animation = "none";
+  // trigger reflow
+  void panel.offsetWidth;
+  panel.style.animation = "fadeUp 0.3s ease-out";
+
+  buildSidebar(searchInput.value);
+  renderEndpoint(item);
+}
+
+function renderEndpoint(item) {
+  const bodyStr = JSON.stringify(item.body, null, 2);
+  const hasEmptyBody = bodyStr === "{}";
+
+  panel.innerHTML = `
+    <div class="endpoint-header">
+      <div class="endpoint-path">
+        <span class="badge">POST</span>
+        /api/v1${item.path}
+      </div>
+      <div class="endpoint-rpc">→ ${item.rpc}</div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title">Request Body</span>
+        <button class="btn-copy" onclick="formatEditor()">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7V4a2 2 0 0 1 2-2h8.5L20 7.5V20a2 2 0 0 1-2 2h-6"/><polyline points="14 2 14 8 20 8"/><path d="M2 15l4 4 4-4"/><line x1="6" y1="19" x2="6" y2="11"/></svg>
+          Format
+        </button>
+      </div>
+      <div class="card-body">
+        <div class="editor-wrap">
+          <textarea class="editor" id="reqEditor" spellcheck="false" placeholder='{ "key": "value" }'>${bodyStr}</textarea>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title">Headers</span>
+        <button class="btn-copy" onclick="addHeader()">+ Add</button>
+      </div>
+      <div class="card-body" id="headersContainer">
+        ${renderHeaders()}
+      </div>
+    </div>
+
+    <div class="send-row">
+      <button class="btn-send" id="btnSend" onclick="sendRequest()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+        Send
+      </button>
+      <span class="response-time" id="responseTime"></span>
+    </div>
+
+    <div id="responseArea"></div>
+
+    <div style="margin-top:28px">
+      <button class="history-toggle" onclick="toggleHistory()">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        History (${history.length})
+      </button>
+      <div class="history-list" id="historyList" style="display:none"></div>
+    </div>
+  `;
+}
+
+function renderHeaders() {
+  return customHeaders.map((h, i) => `
+    <div class="headers-row">
+      <input class="header-input key" value="${esc(h.key)}" placeholder="Header name" oninput="updateHeader(${i},'key',this.value)" spellcheck="false" />
+      <input class="header-input" value="${esc(h.value)}" placeholder="Value" oninput="updateHeader(${i},'value',this.value)" spellcheck="false" />
+      <button class="header-remove" onclick="removeHeader(${i})">×</button>
+    </div>
+  `).join("") + `<button class="add-header-btn" onclick="addHeader()">+ Add header</button>`;
+}
+
+function updateHeader(i, field, val) { customHeaders[i][field] = val; }
+function removeHeader(i) {
+  customHeaders.splice(i, 1);
+  $("#headersContainer").innerHTML = renderHeaders();
+}
+function addHeader() {
+  customHeaders.push({ key: "", value: "" });
+  $("#headersContainer").innerHTML = renderHeaders();
+}
+
+function formatEditor() {
+  const editor = $("#reqEditor");
+  try {
+    const obj = JSON.parse(editor.value);
+    editor.value = JSON.stringify(obj, null, 2);
+    showToast("Formatted");
+  } catch {
+    showToast("Invalid JSON");
+  }
+}
+
+// ── Send Request ─────────────────────────────────────────────────
+
+async function sendRequest() {
+  if (!activeEndpoint) return;
+
+  const btn = $("#btnSend");
+  const responseArea = $("#responseArea");
+  const responseTime = $("#responseTime");
+
+  // Parse body
+  let body;
+  try {
+    body = JSON.parse($("#reqEditor").value);
+  } catch (e) {
+    showToast("Invalid JSON in request body");
+    return;
+  }
+
+  // Build headers
+  const headers = { "Content-Type": "application/json" };
+  customHeaders.forEach((h) => {
+    if (h.key.trim()) headers[h.key.trim()] = h.value;
+  });
+
+  btn.classList.add("loading");
+  responseTime.textContent = "Sending…";
+
+  const url = `${serverInput.value.replace(/\/+$/, "")}/api/v1${activeEndpoint.path}`;
+  const t0 = performance.now();
+
+  try {
+    const res = await fetch(url, {
+      method: "POST",
+      headers,
+      body: JSON.stringify(body),
+    });
+    const elapsed = Math.round(performance.now() - t0);
+    const json = await res.json();
+
+    responseTime.textContent = `${elapsed}ms`;
+
+    const statusClass = res.status < 300 ? "s2xx" : res.status < 500 ? "s4xx" : "s5xx";
+    const pretty = JSON.stringify(json, null, 2);
+
+    responseArea.innerHTML = `
+      <div class="card response-card">
+        <div class="card-header">
+          <span class="card-title">Response</span>
+          <div style="display:flex;gap:8px;align-items:center">
+            <span class="status-badge ${statusClass}">${res.status} ${res.statusText}</span>
+            <button class="btn-copy" onclick="copyResponse(this)">
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+              Copy
+            </button>
+          </div>
+        </div>
+        <div class="card-body">
+          <pre class="response-body" id="responseBody">${syntaxHighlight(pretty)}</pre>
+        </div>
+        <div class="response-meta">
+          <span>Status: ${res.status}</span>
+          <span>Time: ${elapsed}ms</span>
+          <span>Size: ${formatBytes(new Blob([pretty]).size)}</span>
+        </div>
+      </div>
+    `;
+
+    // Add to history
+    history.unshift({
+      path: activeEndpoint.path,
+      status: res.status,
+      time: elapsed,
+      body,
+      response: json,
+      ts: new Date(),
+    });
+    if (history.length > 50) history.pop();
+
+    // Update connection status
+    setStatus("connected", `${res.status}`);
+  } catch (err) {
+    const elapsed = Math.round(performance.now() - t0);
+    responseTime.textContent = `${elapsed}ms`;
+
+    responseArea.innerHTML = `
+      <div class="card response-card">
+        <div class="card-header">
+          <span class="card-title">Response</span>
+          <span class="status-badge s5xx">Error</span>
+        </div>
+        <div class="card-body">
+          <pre class="response-body">${esc(err.message)}\n\nMake sure the server is running at:\n${esc(serverInput.value)}</pre>
+        </div>
+      </div>
+    `;
+
+    setStatus("error", "Unreachable");
+  } finally {
+    btn.classList.remove("loading");
+  }
+}
+
+// ── History ──────────────────────────────────────────────────────
+
+function toggleHistory() {
+  const list = $("#historyList");
+  if (!list) return;
+  const visible = list.style.display !== "none";
+  list.style.display = visible ? "none" : "block";
+  if (!visible) renderHistory();
+}
+
+function renderHistory() {
+  const list = $("#historyList");
+  if (!list) return;
+  if (history.length === 0) {
+    list.innerHTML = '<div style="padding:8px 16px;font-size:0.78rem;color:var(--text-tertiary)">No requests yet</div>';
+    return;
+  }
+  list.innerHTML = history.map((h, i) => `
+    <div class="history-item" onclick="replayHistory(${i})">
+      <span class="h-method">POST</span>
+      <span class="h-path">${esc(h.path)}</span>
+      <span class="h-status ${h.status < 400 ? 'ok' : 'err'}">${h.status}</span>
+      <span class="h-time">${h.time}ms</span>
+    </div>
+  `).join("");
+}
+
+function replayHistory(i) {
+  const h = history[i];
+  const item = ENDPOINTS.flatMap((s) => s.items).find((it) => it.path === h.path);
+  if (item) {
+    selectEndpoint(item);
+    setTimeout(() => {
+      const editor = $("#reqEditor");
+      if (editor) editor.value = JSON.stringify(h.body, null, 2);
+    }, 50);
+  }
+}
+
+// ── Utilities ────────────────────────────────────────────────────
+
+function esc(str) {
+  const d = document.createElement("div");
+  d.textContent = str;
+  return d.innerHTML;
+}
+
+function syntaxHighlight(json) {
+  return json.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")
+    .replace(/"(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?/g, (match) => {
+      let cls = "color:#c41a16"; // string
+      if (/:\s*$/.test(match)) cls = "color:#1d1d1f;font-weight:500"; // key
+      else if (/true|false/.test(match)) cls = "color:#1c00cf"; // bool
+      else if (/null/.test(match)) cls = "color:#86868b"; // null
+      return `<span style="${cls}">${match}</span>`;
+    })
+    .replace(/\b(\d+\.?\d*)\b/g, '<span style="color:#1c00cf">$1</span>');
+}
+
+function formatBytes(bytes) {
+  if (bytes < 1024) return bytes + " B";
+  return (bytes / 1024).toFixed(1) + " KB";
+}
+
+function setStatus(state, text) {
+  statusDot.className = "status-dot " + state;
+  statusText.textContent = text;
+}
+
+function showToast(msg) {
+  toast.textContent = msg;
+  toast.classList.add("visible");
+  clearTimeout(toast._t);
+  toast._t = setTimeout(() => toast.classList.remove("visible"), 2000);
+}
+
+function copyResponse(btn) {
+  const body = $("#responseBody");
+  if (!body) return;
+  navigator.clipboard.writeText(body.textContent).then(() => {
+    btn.classList.add("copied");
+    btn.innerHTML = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg> Copied`;
+    setTimeout(() => {
+      btn.classList.remove("copied");
+      btn.innerHTML = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> Copy`;
+    }, 1500);
+  });
+}
+
+// ── Search ───────────────────────────────────────────────────────
+
+searchInput.addEventListener("input", () => buildSidebar(searchInput.value));
+
+// Keyboard shortcut: Cmd/Ctrl+K to focus search
+document.addEventListener("keydown", (e) => {
+  if ((e.metaKey || e.ctrlKey) && e.key === "k") {
+    e.preventDefault();
+    searchInput.focus();
+    searchInput.select();
+  }
+  // Enter in editor sends
+  if (e.key === "Enter" && e.ctrlKey && document.activeElement?.id === "reqEditor") {
+    e.preventDefault();
+    sendRequest();
+  }
+});
+
+// ── Server Connection Check ──────────────────────────────────────
+
+async function checkConnection() {
+  const url = serverInput.value.replace(/\/+$/, "");
+  try {
+    const res = await fetch(`${url}/api/v1`, { signal: AbortSignal.timeout(3000) });
+    if (res.ok) {
+      const data = await res.json();
+      setStatus("connected", data.version || "Connected");
+    } else {
+      setStatus("error", `${res.status}`);
+    }
+  } catch {
+    setStatus("error", "Offline");
+  }
+}
+
+serverInput.addEventListener("change", checkConnection);
+serverInput.addEventListener("keydown", (e) => { if (e.key === "Enter") checkConnection(); });
+
+// ── Init ─────────────────────────────────────────────────────────
+
+buildSidebar();
+checkConnection();
+</script>
+</body>
+</html>

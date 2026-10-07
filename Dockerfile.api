@@ -1,0 +1,121 @@
+# ─────────────────────────────────────────────────────────────────
+# Dockerfile.api — OpenClaw REST API
+#
+# Multi-stage build producing a lean production image that runs
+# the gateway with the REST API server enabled on port 3000.
+#
+# Build:
+#   docker build -f Dockerfile.api -t openclaw-api .
+#
+# Run (minimal):
+#   docker run -p 3000:3000 -p 18789:18789 openclaw-api
+#
+# Run (with persistent data + env):
+#   docker run -d \
+#     --name openclaw-api \
+#     -p 3000:3000 \
+#     -p 18789:18789 \
+#     -v openclaw-data:/home/node/.openclaw \
+#     -e OPENCLAW_GATEWAY_TOKEN=<your-token> \
+#     openclaw-api
+# ─────────────────────────────────────────────────────────────────
+
+# ── Stage 1: install + build ────────────────────────────────────
+FROM node:22-bookworm AS builder
+
+# Bun is needed by some build scripts
+RUN curl -fsSL https://bun.sh/install | bash
+ENV PATH="/root/.bun/bin:${PATH}"
+
+RUN corepack enable
+
+WORKDIR /app
+
+# ── Install dependencies (layer-cached) ────────────────────────
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml .npmrc ./
+COPY ui/package.json ./ui/package.json
+COPY patches ./patches
+COPY scripts ./scripts
+
+RUN pnpm install --frozen-lockfile
+
+# ── Copy source & build ────────────────────────────────────────
+COPY . .
+
+# Build the main TypeScript project (tsdown → dist/)
+RUN OPENCLAW_A2UI_SKIP_MISSING=1 pnpm build
+
+# Build the control UI (served at /gui on the gateway)
+ENV OPENCLAW_PREFER_PNPM=1
+RUN pnpm ui:build
+
+# ── Prune dev dependencies to slim down the final image ────────
+RUN pnpm prune --prod --no-optional \
+    || pnpm install --frozen-lockfile --prod --ignore-scripts
+
+# ── Stage 2: production image ──────────────────────────────────
+FROM node:22-bookworm-slim AS runtime
+
+# Minimal runtime packages (sharp needs libvips; add more via build-arg)
+ARG EXTRA_APT_PACKAGES=""
+RUN apt-get update \
+    && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+       ca-certificates \
+       curl \
+       tini \
+       $EXTRA_APT_PACKAGES \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/* /var/cache/apt/archives/*
+
+WORKDIR /app
+
+# Copy only what the runtime needs from the builder
+COPY --from=builder /app/dist           ./dist
+COPY --from=builder /app/node_modules   ./node_modules
+COPY --from=builder /app/package.json   ./package.json
+COPY --from=builder /app/openclaw.mjs   ./openclaw.mjs
+COPY --from=builder /app/src/api/gui    ./src/api/gui
+COPY --from=builder /app/assets         ./assets
+COPY --from=builder /app/skills         ./skills
+COPY --from=builder /app/extensions     ./extensions
+COPY --from=builder /app/docs           ./docs
+
+# ── Runtime configuration ──────────────────────────────────────
+ENV NODE_ENV=production
+
+# Enable the REST API server (Express, port 3000)
+ENV OPENCLAW_REST_API=1
+ENV OPENCLAW_REST_PORT=3000
+
+# State / workspace dirs (mount volumes here for persistence)
+ENV OPENCLAW_STATE_DIR=/home/node/.openclaw
+ENV OPENCLAW_WORKSPACE_DIR=/home/node/.openclaw/workspace
+
+# Node memory — tune to your container limits
+ENV NODE_OPTIONS="--max-old-space-size=1536"
+
+# Create writable directories for the non-root user
+RUN mkdir -p /home/node/.openclaw/workspace \
+    && chown -R node:node /app /home/node/.openclaw
+
+# ── Health check ───────────────────────────────────────────────
+# Hits the REST API root which returns { name, version, docs }
+HEALTHCHECK --interval=30s --timeout=5s --start-period=15s --retries=3 \
+    CMD curl -sf http://localhost:3000/ || exit 1
+
+# ── Ports ──────────────────────────────────────────────────────
+# 3000  — REST API  (Express)
+# 18789 — Gateway   (WebSocket + hooks)
+EXPOSE 3000 18789
+
+# ── Security: run as non-root ──────────────────────────────────
+USER node
+
+# ── Entrypoint ─────────────────────────────────────────────────
+# tini ensures proper signal forwarding to Node
+ENTRYPOINT ["tini", "--"]
+
+# Start the gateway (which also boots the REST API when OPENCLAW_REST_API=1).
+# --bind lan so container platforms can reach the service.
+# --allow-unconfigured lets the API start before full onboarding.
+CMD ["node", "dist/index.js", "gateway", "--allow-unconfigured", "--bind", "lan", "--port", "18789"]

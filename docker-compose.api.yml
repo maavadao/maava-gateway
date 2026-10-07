@@ -1,0 +1,59 @@
+# ─────────────────────────────────────────────────────────────
+# docker-compose.api.yml — OpenClaw REST API stack
+#
+# Usage:
+#   cp .env.api.example .env.api        # fill in your secrets
+#   docker compose -f docker-compose.api.yml up -d
+#
+# Endpoints:
+#   REST API  → http://localhost:3000/api/v1
+#   API GUI   → http://localhost:3000/gui
+#   Gateway   → ws://localhost:18789
+# ─────────────────────────────────────────────────────────────
+
+services:
+  openclaw-api:
+    build:
+      context: .
+      dockerfile: Dockerfile.api
+    image: openclaw-api:local
+    container_name: openclaw-api
+    restart: unless-stopped
+    init: true
+    ports:
+      - "${OPENCLAW_REST_PORT:-3000}:3000"        # REST API
+      - "${OPENCLAW_GATEWAY_PORT:-18789}:18789"   # Gateway WS
+    environment:
+      HOME: /home/node
+      TERM: xterm-256color
+      NODE_ENV: production
+
+      # ── REST API ──────────────────────────────────────────
+      OPENCLAW_REST_API: "1"
+      OPENCLAW_REST_PORT: "3000"
+
+      # ── Security ──────────────────────────────────────────
+      OPENCLAW_GATEWAY_TOKEN: ${OPENCLAW_GATEWAY_TOKEN:-}
+
+      # ── Provider keys (set in .env.api) ───────────────────
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      GOOGLE_AI_API_KEY: ${GOOGLE_AI_API_KEY:-}
+
+      # ── Optional session keys ─────────────────────────────
+      CLAUDE_AI_SESSION_KEY: ${CLAUDE_AI_SESSION_KEY:-}
+      CLAUDE_WEB_SESSION_KEY: ${CLAUDE_WEB_SESSION_KEY:-}
+      CLAUDE_WEB_COOKIE: ${CLAUDE_WEB_COOKIE:-}
+    volumes:
+      - openclaw-data:/home/node/.openclaw
+      - openclaw-workspace:/home/node/.openclaw/workspace
+    healthcheck:
+      test: ["CMD", "curl", "-sf", "http://localhost:3000/"]
+      interval: 30s
+      timeout: 5s
+      start_period: 15s
+      retries: 3
+
+volumes:
+  openclaw-data:
+  openclaw-workspace:

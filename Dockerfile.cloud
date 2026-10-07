@@ -1,0 +1,143 @@
+# Dockerfile.cloud — Per-user Cloud Run backend for Barrsa Cloud
+# Based on the main Dockerfile but adds:
+#   - gcsfuse for mounting GCS buckets as local filesystem
+#   - Cloud mode env vars (OPENCLAW_CLOUD_MODE=true)
+#   - Custom entrypoint that mounts GCS before starting the gateway
+#
+# Build: docker build -f Dockerfile.cloud -t barrsa-cloud-backend .
+# Deploy: gcloud run deploy <service> --image <image> --execution-environment gen2
+
+FROM node:22-bookworm
+
+# Install Bun + gcsfuse
+RUN curl -fsSL https://bun.sh/install | bash
+ENV PATH="/root/.bun/bin:${PATH}"
+
+# Install gcsfuse for GCS bucket mounting (Cloud Run gen2 only)
+RUN apt-get update && \
+    DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+      gnupg2 lsb-release fuse && \
+    echo "deb https://packages.cloud.google.com/apt gcsfuse-$(lsb_release -cs) main" \
+      > /etc/apt/sources.list.d/gcsfuse.list && \
+    curl -fsSL https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add - && \
+    apt-get update && \
+    DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends gcsfuse && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/* /var/cache/apt/archives/*
+
+# ── Skill binary dependencies (Linux-compatible bundled skills) ─────────
+# System packages: jq (trello), tmux (tmux), python3/pip/venv (openai-image-gen,
+# local-places, nano-banana-pro, nano-pdf), zip/unzip (data import/export)
+RUN apt-get update && \
+    DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+      jq tmux python3 python3-pip python3-venv zip unzip && \
+    apt-get clean && rm -rf /var/lib/apt/lists/*
+
+# GitHub CLI (gh) — required by the github skill
+RUN mkdir -p -m 755 /etc/apt/keyrings && \
+    curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg \
+      -o /etc/apt/keyrings/githubcli-archive-keyring.gpg && \
+    chmod go+r /etc/apt/keyrings/githubcli-archive-keyring.gpg && \
+    echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" \
+      > /etc/apt/sources.list.d/github-cli.list && \
+    apt-get update && \
+    DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends gh && \
+    apt-get clean && rm -rf /var/lib/apt/lists/*
+
+# Go compiler — builds Go-based skill binaries, then removed to save image size
+ENV GOBIN=/usr/local/bin
+RUN curl -fsSL https://go.dev/dl/go1.23.4.linux-amd64.tar.gz | tar -C /usr/local -xz && \
+    export PATH="/usr/local/go/bin:$PATH" && \
+    go install github.com/Hyaxia/blogwatcher/cmd/blogwatcher@latest && \
+    go install github.com/steipete/blucli/cmd/blu@latest && \
+    go install github.com/steipete/eightctl/cmd/eightctl@latest && \
+    go install github.com/steipete/sonoscli/cmd/sonos@latest && \
+    go install github.com/steipete/wacli/cmd/wacli@latest && \
+    go install github.com/steipete/gifgrep/cmd/gifgrep@latest && \
+    go install github.com/steipete/ordercli/cmd/ordercli@latest && \
+    rm -rf /usr/local/go /root/go
+
+# Node.js skill tools (globally available via /usr/local/bin)
+RUN npm install -g @steipete/bird clawhub mcporter @steipete/oracle
+
+# Python tooling: uv package manager + uv-based skills (nano-pdf, etc.)
+# uv tool envs stored in /opt/uv-tools so the node user (uid 1000) can access them
+ENV UV_TOOL_DIR=/opt/uv-tools
+ENV UV_TOOL_BIN_DIR=/usr/local/bin
+RUN pip install --break-system-packages uv && \
+    uv tool install nano-pdf && \
+    chmod -R a+rX /opt/uv-tools
+
+# ── Homebrew (Linuxbrew) — required by skill auto-installers ────────────
+# Many skills declare kind:"brew" install steps (e.g. nano-banana-pro needs uv via brew).
+# Install Linuxbrew so that `brew install <formula>` works inside the container.
+# build-essential and procps are Linuxbrew hard requirements.
+RUN apt-get update && \
+    DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+      build-essential procps && \
+    apt-get clean && rm -rf /var/lib/apt/lists/*
+
+# Install Homebrew non-interactively as a dedicated user (installer refuses root).
+RUN useradd -m -s /bin/bash linuxbrew
+USER linuxbrew
+RUN NONINTERACTIVE=1 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+USER root
+RUN chmod -R a+rX /home/linuxbrew
+
+# Add Linuxbrew to PATH (available for both root and node user)
+ENV PATH="/home/linuxbrew/.linuxbrew/bin:/home/linuxbrew/.linuxbrew/sbin:${PATH}"
+ENV HOMEBREW_NO_AUTO_UPDATE=1
+
+# NOTE: The following brew-only skills now have a working install path via Linuxbrew.
+# Skills can run `brew install <formula>` at first use.
+# openai-whisper (local model) is skipped — PyTorch dependency (~2 GB).
+# 1password-cli is skipped — requires account setup.
+# himalaya is skipped — no verified Linux release URL.
+# ────────────────────────────────────────────────────────────────────────
+
+RUN corepack enable
+
+WORKDIR /app
+
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml .npmrc ./
+COPY ui/package.json ./ui/package.json
+COPY patches ./patches
+COPY scripts ./scripts
+
+RUN pnpm install --frozen-lockfile
+
+COPY . .
+RUN OPENCLAW_A2UI_SKIP_MISSING=1 pnpm build
+ENV OPENCLAW_PREFER_PNPM=1
+RUN pnpm ui:build
+
+ENV NODE_ENV=production
+
+# ── Cloud mode defaults ─────────────────────────────────────────
+ENV OPENCLAW_CLOUD_MODE=true
+ENV OPENCLAW_REST_API=1
+
+# State directory — gcsfuse mounts the GCS bucket here
+ENV OPENCLAW_STATE_DIR=/home/node/.openclaw
+ENV OPENCLAW_WORKSPACE_DIR=/home/node/.openclaw/workspace
+
+ENV NODE_OPTIONS="--max-old-space-size=1536"
+
+# Create state dirs
+RUN mkdir -p /home/node/.openclaw/workspace
+
+# Default gateway config for cloud mode (proper agent/model config)
+COPY scripts/cloud-openclaw.json /home/node/.openclaw/openclaw.json
+
+# Copy cloud entrypoint script
+COPY scripts/cloud-entrypoint.sh /app/cloud-entrypoint.sh
+RUN chmod +x /app/cloud-entrypoint.sh
+
+# Allow writes
+RUN chown -R node:node /app /home/node/.openclaw
+
+# Note: We run as root because gcsfuse requires FUSE access.
+# In Cloud Run gen2, this is acceptable and handled by the sandbox.
+# The node process itself drops to uid 1000 inside the entrypoint.
+
+ENTRYPOINT ["/app/cloud-entrypoint.sh"]

@@ -1,0 +1,14 @@
+{
+  "name": "@barrsa/seller-agent",
+  "version": "1.0.0",
+  "description": "Barrsa Seller Agent plugin — product listing, social publishing, marketplace tools",
+  "type": "module",
+  "devDependencies": {
+    "openclaw": "workspace:*"
+  },
+  "openclaw": {
+    "extensions": [
+      "./index.ts"
+    ]
+  }
+}

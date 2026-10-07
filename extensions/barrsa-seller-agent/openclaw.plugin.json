@@ -1,0 +1,27 @@
+{
+  "id": "barrsa-seller-agent",
+  "kind": "tools",
+  "configSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "barrsa_api_url": {
+        "type": "string",
+        "description": "Base URL of the Barrsa Configuration API (e.g. https://api.barrsa.ai/api/v1)"
+      },
+      "barrsa_api_token": {
+        "type": "string",
+        "description": "Bearer token for authenticating with the Barrsa API"
+      },
+      "gemini_api_key": {
+        "type": "string",
+        "description": "Google Gemini API Key — auto-injected into GEMINI_API_KEY env var for nano-banana-pro skill. Optional if env var is already set."
+      },
+      "sponge_api_key": {
+        "type": "string",
+        "description": "PaySponge API Key — used for wallet operations, payment links, and USDC transactions. Optional if SPONGE_API_KEY env var is already set."
+      }
+    },
+    "required": ["barrsa_api_url", "barrsa_api_token"]
+  }
+}
