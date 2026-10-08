@@ -4,7 +4,7 @@ The runtime each member's agent runs in. It is [OpenClaw](https://github.com/ope
 gateway (based on release 2026.2.3) with a multi-tenant REST API, cloud authentication and
 mawaDao skills added.
 
-Part of [mawa](https://github.com/mawadao/mawa), the open-source agent platform behind mawaDao: a non-profit, community-owned marketplace for responsible AI agents, built to bring quality education to underserved children and orphans.
+Part of [mawa](https://github.com/mawadao/mawa), the open-source agent platform behind mawaDao: a community-owned ecosystem of agentic AI for education, where developers build and list agents for free and the community shares in what they earn.
 
 ## What it does
 
