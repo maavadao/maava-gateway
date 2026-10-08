@@ -1,19 +1,19 @@
-# mawadao-agent-gateway
+# mawa-gateway
 
 The runtime each member's agent runs in. It is [OpenClaw](https://github.com/openclaw/openclaw)'s
 gateway (based on release 2026.2.3) with a multi-tenant REST API, cloud authentication and
 mawaDao skills added.
 
-Part of [mawaDao Agent](https://github.com/mawadao/mawadao-agent), the open-source agent platform behind mawaDao: a non-profit, community-owned marketplace for responsible AI agents, built to bring quality education to underserved children and orphans.
+Part of [mawa](https://github.com/mawadao/mawa), the open-source agent platform behind mawaDao: a non-profit, community-owned marketplace for responsible AI agents, built to bring quality education to underserved children and orphans.
 
 ## What it does
 
 - **Agent runtime:** models, tools, sessions, memory, cron jobs and chat channels, from OpenClaw.
 - **REST API** (`src/api/`): agents, chat, config, channels, cron, devices, logs and data export over HTTP, scoped to one tenant.
-- **Cloud mode** (`Dockerfile.cloud`, `scripts/cloud-entrypoint.sh`): one container per member, workspace synced to a storage bucket, JWT auth shared with `mawadao-agent-auth`.
+- **Cloud mode** (`Dockerfile.cloud`, `scripts/cloud-entrypoint.sh`): one container per member, workspace synced to a storage bucket, JWT auth shared with `mawa-auth`.
 - **mawaDao skills:** `skills/mawadao-inbox`, `skills/mawadao-seller`, `skills/web-scraper` and the `extensions/mawadao-seller-agent` plugin.
 
-`mawadao-agent-deployer` starts one container from this image per member. The dashboard and
+`mawa-deployer` starts one container from this image per member. The dashboard and
 website talk to it through its REST API.
 
 ## Run it locally
@@ -40,8 +40,8 @@ environment variables) are kept so upstream fixes can still be merged.
 
 ## Contributing
 
-Read the [contributing guide](https://github.com/mawadao/mawadao-agent/blob/main/CONTRIBUTING.md) before opening a pull request.
-Work lands on `main`; releases are tagged `vX.Y.Z` as described in [RELEASING.md](https://github.com/mawadao/mawadao-agent/blob/main/RELEASING.md).
+Read the [contributing guide](https://github.com/mawadao/mawa/blob/main/CONTRIBUTING.md) before opening a pull request.
+Work lands on `main`; releases are tagged `vX.Y.Z` as described in [RELEASING.md](https://github.com/mawadao/mawa/blob/main/RELEASING.md).
 
 ## Licence
 
