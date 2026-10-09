@@ -174,7 +174,7 @@ router.get("/data/export", async (req, res) => {
     res.setHeader("Content-Type", "application/zip");
     res.setHeader(
       "Content-Disposition",
-      `attachment; filename="mawadao-export.zip"`,
+      `attachment; filename="maavadao-export.zip"`,
     );
     res.setHeader("Content-Length", stat.size);
 

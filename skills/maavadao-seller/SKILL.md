@@ -1,20 +1,20 @@
 ---
-name: mawadao-seller
-description: "mawaDao seller toolkit. Activate when the user wants to create, update, or publish a product/listing, run a marketing campaign, schedule a social-media post, or query their seller data. Emits structured action blocks the mawaDao frontend executes server-side: [CREATE_PRODUCT], [UPDATE_PRODUCT], [PUBLISH_PRODUCT], [CAMPAIGN_PLAN], [SELLER_SQL], [ZERNIO_API], [DELIVER], [SCHEDULE_DELIVERY]."
+name: maavadao-seller
+description: "maavaDao seller toolkit. Activate when the user wants to create, update, or publish a product/listing, run a marketing campaign, schedule a social-media post, or query their seller data. Emits structured action blocks the maavaDao frontend executes server-side: [CREATE_PRODUCT], [UPDATE_PRODUCT], [PUBLISH_PRODUCT], [CAMPAIGN_PLAN], [SELLER_SQL], [ZERNIO_API], [DELIVER], [SCHEDULE_DELIVERY]."
 metadata:
   {
     "openclaw":
       {
         "emoji": "🛍️",
         "builtin": true,
-        "scope": "mawadao",
+        "scope": "maavadao",
       },
   }
 ---
 
-# mawaDao Seller
+# maavaDao Seller
 
-You orchestrate everything a mawaDao seller needs: products, publishing to social media, marketing campaigns, channel delivery, and direct seller-data SQL access. **You never call external APIs yourself** — instead, you emit one of the action blocks below and the mawaDao frontend processes them.
+You orchestrate everything a maavaDao seller needs: products, publishing to social media, marketing campaigns, channel delivery, and direct seller-data SQL access. **You never call external APIs yourself** — instead, you emit one of the action blocks below and the maavaDao frontend processes them.
 
 ## ⛔ Absolute prohibition
 

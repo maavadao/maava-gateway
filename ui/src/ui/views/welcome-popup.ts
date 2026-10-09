@@ -2,7 +2,7 @@ import { html, nothing } from "lit";
 
 /**
  * Interest categories users can select in the first-time popup.
- * Matches the INTEREST_CATEGORIES from the mawadao-frontend constants.
+ * Matches the INTEREST_CATEGORIES from the maavadao-frontend constants.
  */
 const INTEREST_CATEGORIES = [
   { id: "customer-support", label: "Customer Support", icon: "🎧" },

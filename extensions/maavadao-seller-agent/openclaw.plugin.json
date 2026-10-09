@@ -1,17 +1,17 @@
 {
-  "id": "mawadao-seller-agent",
+  "id": "maavadao-seller-agent",
   "kind": "tools",
   "configSchema": {
     "type": "object",
     "additionalProperties": false,
     "properties": {
-      "mawadao_api_url": {
+      "maavadao_api_url": {
         "type": "string",
-        "description": "Base URL of the mawaDao Configuration API (e.g. https://api.mawadao.ai/api/v1)"
+        "description": "Base URL of the maavaDao Configuration API (e.g. https://api.maavadao.ai/api/v1)"
       },
-      "mawadao_api_token": {
+      "maavadao_api_token": {
         "type": "string",
-        "description": "Bearer token for authenticating with the mawaDao API"
+        "description": "Bearer token for authenticating with the maavaDao API"
       },
       "gemini_api_key": {
         "type": "string",
@@ -22,6 +22,6 @@
         "description": "PaySponge API Key — used for wallet operations, payment links, and USDC transactions. Optional if SPONGE_API_KEY env var is already set."
       }
     },
-    "required": ["mawadao_api_url", "mawadao_api_token"]
+    "required": ["maavadao_api_url", "maavadao_api_token"]
   }
 }

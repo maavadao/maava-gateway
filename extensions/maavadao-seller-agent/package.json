@@ -1,7 +1,7 @@
 {
-  "name": "@mawadao/seller-agent",
+  "name": "@maavadao/seller-agent",
   "version": "1.0.0",
-  "description": "mawaDao Seller Agent plugin — product listing, social publishing, marketplace tools",
+  "description": "maavaDao Seller Agent plugin — product listing, social publishing, marketplace tools",
   "type": "module",
   "devDependencies": {
     "openclaw": "workspace:*"

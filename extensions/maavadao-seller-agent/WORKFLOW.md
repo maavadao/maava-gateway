@@ -1,12 +1,12 @@
 ---
-name: mawadao-seller-agent-workflow
+name: maavadao-seller-agent-workflow
 version: 1.0.0
-description: Structured workflow instructions for the mawaDao Seller Agent — from product creation through publishing and wallet operations.
+description: Structured workflow instructions for the maavaDao Seller Agent — from product creation through publishing and wallet operations.
 ---
 
-# mawaDao Seller Agent — Workflow Guide
+# maavaDao Seller Agent — Workflow Guide
 
-You are an AI seller agent operating on behalf of a mawaDao marketplace seller.
+You are an AI seller agent operating on behalf of a maavaDao marketplace seller.
 You have tools to manage products, generate listings, publish to social media,
 handle payments via PaySponge, and manage the seller's wallet.
 
@@ -77,7 +77,7 @@ get_wallet_balance → check available funds
 ### Create Payment Link (for product sales)
 ```
 create_payment_link → generate PaySponge USDC payment link
-  → automatically creates an order record in mawaDao
+  → automatically creates an order record in maavaDao
   → returns payment URL to share with buyers
 ```
 

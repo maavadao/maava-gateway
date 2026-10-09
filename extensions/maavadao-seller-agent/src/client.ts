@@ -1,11 +1,11 @@
 /**
- * mawaDao Seller API Client
+ * maavaDao Seller API Client
  *
- * Used by the OpenClaw plugin to call back into the mawaDao Configuration API.
- * mawaDao owns the data; OpenClaw is the intelligent operator.
+ * Used by the OpenClaw plugin to call back into the maavaDao Configuration API.
+ * maavaDao owns the data; OpenClaw is the intelligent operator.
  */
 
-export class MawadaoSellerClient {
+export class MaavadaoSellerClient {
   private baseUrl: string;
   private token: string;
   private userId?: string;
@@ -40,7 +40,7 @@ export class MawadaoSellerClient {
     if (!response.ok) {
       const msg =
         (data as Record<string, string>)?.error || `HTTP ${response.status}`;
-      throw new Error(`mawaDao API error: ${msg}`);
+      throw new Error(`maavaDao API error: ${msg}`);
     }
 
     return (data as Record<string, T>)?.data ?? (data as T);

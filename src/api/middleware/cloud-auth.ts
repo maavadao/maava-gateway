@@ -27,7 +27,7 @@ declare global {
     }
 }
 
-const JWT_ISSUER = "mawadao-auth";
+const JWT_ISSUER = "maavadao-auth";
 const AUTH_DEBUG = process.env.AUTH_DEBUG === "true";
 
 /** Decode a base64url-encoded string */

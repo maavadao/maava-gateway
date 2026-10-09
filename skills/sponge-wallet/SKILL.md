@@ -133,7 +133,7 @@ curl -sS -X POST "https://api.wallet.paysponge.com/api/payment-links" \
   -d '{
     "amount": "25.00",
     "description": "Product purchase",
-    "callback_url": "https://api.mawadao.com/seller/orders/webhook/payment"
+    "callback_url": "https://api.maavadao.com/seller/orders/webhook/payment"
   }'
 
 # Check payment status

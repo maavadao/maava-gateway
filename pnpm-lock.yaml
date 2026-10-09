@@ -384,7 +384,7 @@ importers:
         specifier: workspace:*
         version: link:../..
 
-  extensions/mawadao-seller-agent:
+  extensions/maavadao-seller-agent:
     devDependencies:
       openclaw:
         specifier: workspace:*
